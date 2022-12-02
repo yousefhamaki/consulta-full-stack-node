@@ -4,7 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "api:start": "echo \"Error: no test specified\" && exit 1"
+    "api:start": "cd backend && npm start",
+    "api:dev": "cd backend && npm run dev",
+    "api:test": "cd backend && npm run test",
+    "api:build": "cd backend && npm run build",
+    "api:migrate": "cd backend && npm run migrate",
+    "api:lint": "cd backend && npm run lint",
+    "api:lint:f": "cd backend && npm run lint:f",
+    "api:format": "cd backend && npm run format"
   },
   "author": "yousef hamaki",
   "license": "ISC"

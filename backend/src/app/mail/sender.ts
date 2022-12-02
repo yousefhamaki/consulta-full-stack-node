@@ -26,11 +26,7 @@ export const verifyAcc = async (_link: string, to: string) => {
     status: "waiting",
     data: {},
   };
-  // const html = await ejs.renderFile(
-  //   "verify.ejs",
-  //   { email: link },
-  //   { root: "verify.ejs" }
-  // );
+
   const from = config.EmailGmail as string;
   const mailDetails: mailOptions = {
     from: from,

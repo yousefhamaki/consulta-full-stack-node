@@ -12,8 +12,6 @@ exports.Home = async (
   _: Request,
   res: Response
 ): Promise<Response<JsonReurn>> => {
-  // return res.render("../views/verify.ejs", { email: "http://localhost:3000" });
-
   return res.status(200).json({
     status: "success",
     message: "Welcome to store App",
