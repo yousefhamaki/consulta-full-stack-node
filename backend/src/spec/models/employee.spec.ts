@@ -50,7 +50,7 @@ describe("Employee Model", () => {
   it("Get all users", async () => {
     const res = await employee.getEmployees(0);
 
-    expect(res.data.length).toEqual(1);
+    expect(res.data.length).toBeGreaterThan(0);
   });
 
   it("Get all users", async () => {
@@ -60,17 +60,20 @@ describe("Employee Model", () => {
   });
 
   it("Change password Successfully", async () => {
-    const res = await employee.changePass("Hamaki5050", Newuser.id as number);
+    const res = await employee.changePass(
+      Newuser.password,
+      "Hamaki5050",
+      Newuser.id as number
+    );
 
-    expect(res.changedRows).toEqual(1);
-    expect(res.affectedRows).toEqual(1);
+    expect(res?.changedRows).toEqual(1);
+    expect(res?.affectedRows).toEqual(1);
   });
 
   it("Change password Error", async () => {
-    const res = await employee.changePass("Hamaki5050", 800);
+    const res = await employee.changePass("nhlefnewldf02", "Hamaki5050", 800);
 
-    expect(res.changedRows).toEqual(0);
-    expect(res.affectedRows).toEqual(0);
+    expect(res).toBeNull;
   });
 
   it("Make Auth Successfully", async () => {

@@ -54,21 +54,20 @@ describe("Employee Model", () => {
     }));
     it("Get all users", () => __awaiter(void 0, void 0, void 0, function* () {
         const res = yield employee.getEmployees(0);
-        expect(res.data.length).toEqual(1);
+        expect(res.data.length).toBeGreaterThan(0);
     }));
     it("Get all users", () => __awaiter(void 0, void 0, void 0, function* () {
         const res = yield employee.getEmployees(1);
         expect(res.data).toBeNull;
     }));
     it("Change password Successfully", () => __awaiter(void 0, void 0, void 0, function* () {
-        const res = yield employee.changePass("Hamaki5050", Newuser.id);
-        expect(res.changedRows).toEqual(1);
-        expect(res.affectedRows).toEqual(1);
+        const res = yield employee.changePass(Newuser.password, "Hamaki5050", Newuser.id);
+        expect(res === null || res === void 0 ? void 0 : res.changedRows).toEqual(1);
+        expect(res === null || res === void 0 ? void 0 : res.affectedRows).toEqual(1);
     }));
     it("Change password Error", () => __awaiter(void 0, void 0, void 0, function* () {
-        const res = yield employee.changePass("Hamaki5050", 800);
-        expect(res.changedRows).toEqual(0);
-        expect(res.affectedRows).toEqual(0);
+        const res = yield employee.changePass("nhlefnewldf02", "Hamaki5050", 800);
+        expect(res).toBeNull;
     }));
     it("Make Auth Successfully", () => __awaiter(void 0, void 0, void 0, function* () {
         const res = yield employee.makeAuth(Newuser.email, Newuser.password);

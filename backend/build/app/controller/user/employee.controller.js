@@ -35,12 +35,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const admin_model_1 = __importDefault(require("../../models/user/admin.model"));
-const valiedPassword_1 = __importStar(require("../../traits/valiedPassword"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../../config"));
-const admin = new admin_model_1.default();
-class AdminController {
+const employee_model_1 = __importDefault(require("../../models/user/employee.model"));
+const valiedPassword_1 = __importStar(require("../../traits/valiedPassword"));
+const employee = new employee_model_1.default();
+class employeeController {
     create(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             if (req.user == undefined || req.user.rank !== "admin") {
@@ -51,15 +51,16 @@ class AdminController {
                 return res.status(505).json(checkPass);
             }
             try {
-                const checkemail = yield (0, valiedPassword_1.valiedEmail)(req.body.email, "admins");
+                const checkemail = yield (0, valiedPassword_1.valiedEmail)(req.body.email, "employees");
                 if (checkemail !== false) {
                     return res.status(505).json(checkemail);
                 }
-                const create = yield admin.create(req.body);
+                req.body.admin_id = req.user.id;
+                const create = yield employee.create(req.body);
                 const token = jsonwebtoken_1.default.sign({ create }, config_1.default.secretToken);
                 return res.json({
                     status: "success",
-                    message: "Admin created successfully",
+                    message: "Employee created successfully",
                     data: Object.assign(Object.assign({}, create), { token: "Bearer " + token }),
                 });
             }
@@ -71,7 +72,7 @@ class AdminController {
     login(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const data = yield admin.makeAuth(req.body.email, req.body.password);
+                const data = yield employee.makeAuth(req.body.email, req.body.password);
                 if (!data) {
                     return res.status(401).json({
                         status: "failed",
@@ -81,7 +82,7 @@ class AdminController {
                 const token = jsonwebtoken_1.default.sign({ data }, config_1.default.secretToken);
                 return res.status(200).json({
                     status: "success",
-                    message: "Admin is login successfully",
+                    message: "Employee is login successfully",
                     data: Object.assign(Object.assign({}, data), { token: "Bearer " + token }),
                 });
             }
@@ -90,19 +91,19 @@ class AdminController {
             }
         });
     }
-    getAdminInfo(req, res, next) {
+    getEmployeeInfo(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const user = yield admin.getAdmin(Number(req.params.id));
+                const user = yield employee.getEmployee(Number(req.params.id));
                 if (!user) {
                     return res.status(404).json({
                         status: "failed",
-                        message: "this admin isnot defined",
+                        message: "this employee isnot defined",
                     });
                 }
                 return res.status(200).json({
                     status: "success",
-                    message: "Get Admin info successfully",
+                    message: "Get employee info successfully",
                     data: user,
                 });
             }
@@ -111,13 +112,13 @@ class AdminController {
             }
         });
     }
-    getAmins(req, res, next) {
+    getEmployees(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const user = yield admin.getAllAdmins(Number(req.query.page) | 1);
+                const user = yield employee.getEmployees(Number(req.query.page) | 1);
                 return res.status(200).json({
                     status: "success",
-                    message: "Users info got successfully",
+                    message: "Employees info got successfully",
                     data: user,
                 });
             }
@@ -129,7 +130,7 @@ class AdminController {
     changePass(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const result = yield admin.changePass(req.body.oldpassword, req.body.newpassword, Number(req.body.id));
+                const result = yield employee.changePass(req.body.oldpassword, req.body.newpassword, Number(req.body.id));
                 if (result === null) {
                     return res.status(412).json({
                         status: "failed",
@@ -148,4 +149,4 @@ class AdminController {
         });
     }
 }
-exports.default = AdminController;
+exports.default = employeeController;

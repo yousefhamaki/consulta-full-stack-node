@@ -97,11 +97,18 @@ class employeeModel {
             }
         });
     }
-    changePass(password, id) {
+    changePass(oldpassword, newpassword, id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const rows = (yield (0, connect_1.query)(`UPDATE  employees SET password='${HashPass_1.default.MakeHash(password)}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`));
-                return rows;
+                const password = (yield (0, connect_1.query)(`SELECT password FROM employees WHERE id='${id}';`));
+                if (password.length > 0) {
+                    const { password: hash } = password[0];
+                    if (HashPass_1.default.check(oldpassword, hash)) {
+                        const rows = (yield (0, connect_1.query)(`UPDATE  employees SET password='${HashPass_1.default.MakeHash(newpassword)}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`));
+                        return rows;
+                    }
+                }
+                return null;
             }
             catch (err) {
                 throw new Error(`unable to change password of this employees : ${err.message}`);

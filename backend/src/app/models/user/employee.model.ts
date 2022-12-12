@@ -110,15 +110,31 @@ class employeeModel {
     }
   }
 
-  async changePass(password: string, id: number): Promise<Accepted> {
+  async changePass(
+    oldpassword: string,
+    newpassword: string,
+    id: number
+  ): Promise<Accepted | null> {
     try {
-      const rows = (await query(
-        `UPDATE  employees SET password='${HashPass.MakeHash(
-          password
-        )}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`
-      )) as Accepted;
+      const password = (await query(
+        `SELECT password FROM employees WHERE id='${id}';`
+      )) as Employee[];
 
-      return rows;
+      if (password.length > 0) {
+        const { password: hash } = password[0];
+
+        if (HashPass.check(oldpassword, hash)) {
+          const rows = (await query(
+            `UPDATE  employees SET password='${HashPass.MakeHash(
+              newpassword
+            )}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`
+          )) as Accepted;
+
+          return rows;
+        }
+      }
+
+      return null;
     } catch (err) {
       throw new Error(
         `unable to change password of this employees : ${

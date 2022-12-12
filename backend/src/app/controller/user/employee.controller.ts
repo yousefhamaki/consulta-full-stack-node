@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from "express";
-import adminModel from "../../models/user/admin.model";
-import valiedPassword, { valiedEmail } from "../../traits/valiedPassword";
 import jwt from "jsonwebtoken";
 import config from "../../config";
 import JsonReurn from "../../interface/JsonReturn";
 import ARequest from "../../interface/Request.interface";
+import employeeModel from "../../models/user/employee.model";
+import valiedPassword, { valiedEmail } from "../../traits/valiedPassword";
 
-const admin = new adminModel();
+const employee = new employeeModel();
 
-class AdminController {
+class employeeController {
   async create(
     req: ARequest,
     res: Response,
@@ -25,12 +25,13 @@ class AdminController {
 
     //add new user
     try {
-      const checkemail = await valiedEmail(req.body.email, "admins");
+      const checkemail = await valiedEmail(req.body.email, "employees");
       if (checkemail !== false) {
         return res.status(505).json(checkemail);
       }
 
-      const create = await admin.create(req.body);
+      req.body.admin_id = req.user.id;
+      const create = await employee.create(req.body);
 
       const token = jwt.sign(
         { create },
@@ -39,7 +40,7 @@ class AdminController {
 
       return res.json({
         status: "success",
-        message: "Admin created successfully",
+        message: "Employee created successfully",
         data: { ...create, token: "Bearer " + token },
       });
     } catch (err) {
@@ -53,7 +54,10 @@ class AdminController {
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const data = await admin.makeAuth(req.body.email, req.body.password);
+      const data = await employee.makeAuth(
+        req.body.email as string,
+        req.body.password as string
+      );
 
       if (!data) {
         return res.status(401).json({
@@ -64,7 +68,7 @@ class AdminController {
       const token = jwt.sign({ data }, config.secretToken as unknown as string);
       return res.status(200).json({
         status: "success",
-        message: "Admin is login successfully",
+        message: "Employee is login successfully",
         data: { ...data, token: "Bearer " + token },
       });
     } catch (err) {
@@ -72,23 +76,23 @@ class AdminController {
     }
   }
 
-  async getAdminInfo(
+  async getEmployeeInfo(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await admin.getAdmin(Number(req.params.id));
+      const user = await employee.getEmployee(Number(req.params.id));
 
       if (!user) {
         return res.status(404).json({
           status: "failed",
-          message: "this admin isnot defined",
+          message: "this employee isnot defined",
         });
       }
       return res.status(200).json({
         status: "success",
-        message: "Get Admin info successfully",
+        message: "Get employee info successfully",
         data: user,
       });
     } catch (err) {
@@ -96,17 +100,17 @@ class AdminController {
     }
   }
 
-  async getAmins(
+  async getEmployees(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await admin.getAllAdmins(Number(req.query.page) | 1);
+      const user = await employee.getEmployees(Number(req.query.page) | 1);
 
       return res.status(200).json({
         status: "success",
-        message: "Users info got successfully",
+        message: "Employees info got successfully",
         data: user,
       });
     } catch (err) {
@@ -120,7 +124,7 @@ class AdminController {
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await admin.changePass(
+      const result = await employee.changePass(
         req.body.oldpassword,
         req.body.newpassword,
         Number(req.body.id)
@@ -144,4 +148,4 @@ class AdminController {
   }
 }
 
-export default AdminController;
+export default employeeController;
