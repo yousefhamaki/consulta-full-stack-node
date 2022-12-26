@@ -4,12 +4,21 @@ import config from "../../config";
 import JsonReurn from "../../interface/JsonReturn";
 import ARequest from "../../interface/Request.interface";
 import employeeModel from "../../models/user/employee.model";
-import valiedPassword, { valiedEmail } from "../../traits/valiedPassword";
-
-const employee = new employeeModel();
+import Check from "../../traits/Checks";
 
 class employeeController {
-  async create(
+  private readonly models = new employeeModel();
+  private readonly check = new Check();
+
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+  async createController(
     req: ARequest,
     res: Response,
     next: NextFunction
@@ -18,20 +27,20 @@ class employeeController {
       return res.status(401).send({ message: "Unable to use this link" });
     }
 
-    const checkPass = await valiedPassword(req.body.password);
+    const checkPass = await this.check.Password(req.body.password);
     if (checkPass !== false) {
       return res.status(505).json(checkPass);
     }
 
     //add new user
     try {
-      const checkemail = await valiedEmail(req.body.email, "employees");
+      const checkemail = await this.check.Email(req.body.email, "employees");
       if (checkemail !== false) {
         return res.status(505).json(checkemail);
       }
 
       req.body.admin_id = req.user.id;
-      const create = await employee.create(req.body);
+      const create = await this.models.create(req.body);
 
       const token = jwt.sign(
         { create },
@@ -48,13 +57,21 @@ class employeeController {
     }
   }
 
-  async login(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+  async loginController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const data = await employee.makeAuth(
+      const data = await this.models.makeAuth(
         req.body.email as string,
         req.body.password as string
       );
@@ -76,13 +93,21 @@ class employeeController {
     }
   }
 
-  async getEmployeeInfo(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+  async getEmployeeInfoController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await employee.getEmployee(Number(req.params.id));
+      const user = await this.models.getEmployee(Number(req.params.id));
 
       if (!user) {
         return res.status(404).json({
@@ -100,13 +125,21 @@ class employeeController {
     }
   }
 
-  async getEmployees(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+  async getEmployeesController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await employee.getEmployees(Number(req.query.page) | 1);
+      const user = await this.models.getEmployees(Number(req.query.page) | 1);
 
       return res.status(200).json({
         status: "success",
@@ -118,13 +151,22 @@ class employeeController {
     }
   }
 
-  async changePass(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async changePassController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await employee.changePass(
+      const result = await this.models.changePass(
         req.body.oldpassword,
         req.body.newpassword,
         Number(req.body.id)

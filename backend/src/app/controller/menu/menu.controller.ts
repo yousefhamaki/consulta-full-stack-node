@@ -4,18 +4,26 @@ import ARequest from "../../interface/Request.interface";
 import menuModel from "../../models/menu/menu.model";
 import menuUserModel from "../../models/menu/menuUser.model";
 
-const model = new menuModel();
-
-const menuUser = new menuUserModel();
-
 class menuController {
-  async create(
+  private readonly menuUser = new menuUserModel();
+  private readonly models = new menuModel();
+
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async createController(
     req: ARequest,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await model.create(req.body);
+      const result = await this.models.create(req.body);
 
       return res.json({
         status: "success",
@@ -27,13 +35,22 @@ class menuController {
     }
   }
 
-  async getMenu(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getMenuController(
     _req: ARequest,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await menuUser.getMenu();
+      const result = await this.menuUser.getMenu();
 
       return res.json({
         status: "success",
@@ -45,13 +62,22 @@ class menuController {
     }
   }
 
-  async getMenuItems(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getMenuItemsController(
     _req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await model.getMenuItems();
+      const result = await this.models.getMenuItems();
 
       return res.json({
         status: "success",
@@ -63,13 +89,22 @@ class menuController {
     }
   }
 
-  async getMenuItem(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getMenuItemController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await model.getMenuItem(Number(req.params.id));
+      const result = await this.models.getMenuItem(Number(req.params.id));
 
       return res.json({
         status: "success",
@@ -81,13 +116,22 @@ class menuController {
     }
   }
 
-  async updateInfo(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async updateInfoController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await model.updateInfo(req.body);
+      const result = await this.models.updateInfo(req.body);
 
       return res.json({
         status: "success",

@@ -1,11 +1,24 @@
 import { query } from "../../database/connect";
 import User, { Pagination } from "../../types/user.type";
-import HashPass from "../../traits/HashPass";
 import config from "../../config";
 import Accepted from "../../types/accepted.type";
+import Tokens from "../../traits/Tokens";
+
+/**
+ * @author y.hamaki
+ * @since 12/22
+ */
 
 class userModel {
-  //auth user
+  private readonly tokens = new Tokens();
+
+  /**
+   * @type Function
+   * @param email @type {string}
+   * @param pass @type {string}
+   * @returns Promise<<User | null>
+   */
+
   async makeAuth(email: string, pass: string): Promise<User | null> {
     try {
       const rows = (await query(
@@ -15,7 +28,7 @@ class userModel {
       if (rows.length > 0) {
         const { password: hash } = rows[0];
 
-        if (HashPass.check(pass, hash)) {
+        if (this.tokens.check(pass, hash)) {
           const user = (await this.getUser(rows[0].id as number)) as User;
 
           return user;
@@ -27,13 +40,19 @@ class userModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param data @type {User}
+   * @returns Promise<User>
+   */
+
   async create(data: User): Promise<User> {
     try {
       const rows = (await query(
         `INSERT INTO users (ip, name, email, password, age, created_at, updated_at)
         VALUES ('${data.ip}', '${data.name}', '${
           data.email
-        }', '${HashPass.MakeHash(data.password)}', '${
+        }', '${this.tokens.MakeHash(data.password)}', '${
           data.age
         }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);`
       )) as { insertId: number };
@@ -44,6 +63,13 @@ class userModel {
       throw new Error(`unable to add this user : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param email @type {string}
+   * @param table @type {string}
+   * @returns Promise<<User | null>
+   */
 
   async checkEmail(email: string, table: string): Promise<boolean> {
     try {
@@ -60,6 +86,12 @@ class userModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param id @type {number}
+   * @returns Promise<User>
+   */
+
   async getUser(id: number): Promise<User> {
     try {
       const rows = (await query(
@@ -72,6 +104,13 @@ class userModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param code @type {string}
+   * @param email @type {string}
+   * @returns Promise<<Accepted>
+   */
+
   async saveCode(code: string, email: string): Promise<Accepted> {
     try {
       const rows = (await query(
@@ -82,6 +121,13 @@ class userModel {
       throw new Error(`unable to save this code : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param usercode @type {string}
+   * @param email @type {string}
+   * @returns Promise<<boolean>
+   */
 
   async checkCode(usercode: string, email: string): Promise<boolean> {
     try {
@@ -100,6 +146,12 @@ class userModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param email @type {string}
+   * @returns Promise<<Accepted>
+   */
+
   async Verify(email: string): Promise<Accepted> {
     try {
       const rows = (await query(
@@ -110,6 +162,14 @@ class userModel {
       throw new Error(`unable to save this code : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param oldpassword @type {string}
+   * @param newpassword @type {string}
+   * @param id @type {number}
+   * @returns Promise<<Accepted | null>
+   */
 
   async changePass(
     oldpassword: string,
@@ -124,9 +184,9 @@ class userModel {
       if (password.length > 0) {
         const { password: hash } = password[0];
 
-        if (HashPass.check(oldpassword, hash)) {
+        if (this.tokens.check(oldpassword, hash)) {
           const rows = (await query(
-            `UPDATE  users SET password='${HashPass.MakeHash(
+            `UPDATE  users SET password='${this.tokens.MakeHash(
               newpassword
             )}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`
           )) as Accepted;
@@ -142,6 +202,12 @@ class userModel {
       );
     }
   }
+
+  /**
+   * @type Function
+   * @param page @type {number}
+   * @returns Promise<<Pagination>
+   */
 
   async getAllUsers(page: number): Promise<Pagination> {
     try {
@@ -187,6 +253,12 @@ class userModel {
       throw new Error(`unable to get users : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param id @type {number}
+   * @returns Promise<<Accepted>
+   */
 
   async delete(id: number): Promise<Accepted> {
     try {

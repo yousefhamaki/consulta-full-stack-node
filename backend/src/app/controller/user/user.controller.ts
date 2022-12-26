@@ -6,29 +6,39 @@ import config from "../../config";
 import mailOptions from "../../types/MailOption.type";
 import transporter from "../../mail/Gmail";
 import MainModel from "../../models/main.models";
-import valiedPassword, { valiedEmail } from "../../traits/valiedPassword";
-
-const models = new userModel();
-const mainModel = new MainModel();
+import Check from "../../traits/Checks";
 
 class userController {
-  async create(
+  private readonly mainModel = new MainModel();
+  private readonly models = new userModel();
+  private readonly check = new Check();
+
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async createController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     //password validation
-    const checkPass = await valiedPassword(req.body.password);
+    const checkPass = await this.check.Password(req.body.password);
     if (checkPass !== false) {
       return res.status(505).json(checkPass);
     }
     //add new user
     try {
-      const checkemail = await valiedEmail(req.body.email, "users");
+      const checkemail = await this.check.Email(req.body.email, "users");
       if (checkemail !== false) {
         return res.status(505).json(checkemail);
       }
-      const create = await models.create(req.body);
+      const create = await this.models.create(req.body);
       const token = jwt.sign(
         { create },
         config.secretToken as unknown as string
@@ -44,13 +54,25 @@ class userController {
     }
   }
 
-  async login(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async loginController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const data = await models.makeAuth(req.body.email, req.body.password);
+      const data = await this.models.makeAuth(
+        req.body.email,
+        req.body.password
+      );
 
       if (!data) {
         return res.status(401).json({
@@ -69,13 +91,22 @@ class userController {
     }
   }
 
-  async getUserInfo(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getUserInfoController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await models.getUser(Number(req.params.id));
+      const user = await this.models.getUser(Number(req.params.id));
 
       if (!user) {
         return res.status(404).json({
@@ -93,13 +124,22 @@ class userController {
     }
   }
 
-  async getUsers(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getUsersController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await models.getAllUsers(Number(req.query.page) | 1);
+      const user = await this.models.getAllUsers(Number(req.query.page) | 1);
 
       return res.status(200).json({
         status: "success",
@@ -111,13 +151,22 @@ class userController {
     }
   }
 
-  async delete(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async deleteController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const state = await mainModel.delete(Number(req.params.id), "users");
+      const state = await this.mainModel.delete(Number(req.params.id), "users");
       if (state.affectedRows === 1) {
         return res.json({
           status: "success",
@@ -135,7 +184,16 @@ class userController {
     }
   }
 
-  async verifyRequest(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async verifyRequestController(
     req: Request,
     res: Response,
     next: NextFunction
@@ -149,7 +207,7 @@ class userController {
         }
       );
 
-      await models.saveCode(token, req.body.email);
+      await this.models.saveCode(token, req.body.email);
 
       const mailDetails: mailOptions = {
         to: req.body.email as string,
@@ -183,14 +241,23 @@ class userController {
     }
   }
 
-  async verifyResponse(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async verifyResponseController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      if (await models.checkCode(req.params.code, req.params.email)) {
-        await models.Verify(req.params.email);
+      if (await this.models.checkCode(req.params.code, req.params.email)) {
+        await this.models.Verify(req.params.email);
         return res.json({
           status: "success",
           message: "User account is verified successfully",
@@ -206,13 +273,22 @@ class userController {
     }
   }
 
-  async changePass(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async changePassController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await models.changePass(
+      const result = await this.models.changePass(
         req.body.oldpassword,
         req.body.newpassword,
         Number(req.body.id)

@@ -1,11 +1,24 @@
 import { query } from "../../database/connect";
-import HashPass from "../../traits/HashPass";
 import { Pagination } from "../../types/user.type";
 import config from "../../config";
 import Accepted from "../../types/accepted.type";
 import Employee from "../../types/employee.type";
+import Tokens from "../../traits/Tokens";
+
+/**
+ * @author y.hamaki
+ * @since 12/22
+ */
 
 class employeeModel {
+  private readonly tokens = new Tokens();
+
+  /**
+   * @type Function
+   * @param data @type {Employee}
+   * @returns Promise<Employee>
+   */
+
   async create(data: Employee): Promise<Employee> {
     try {
       const rows = (await query(
@@ -13,7 +26,7 @@ class employeeModel {
              salary, job_title, status, created_at, updated_at)
                 VALUES ('${data.admin_id}', '${data.name}', '${data.email}', '${
           data.options
-        }', '${HashPass.MakeHash(data.password)}', '${data.salary}', '${
+        }', '${this.tokens.MakeHash(data.password)}', '${data.salary}', '${
           data.job_title
         }', '${data.status}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);`
       )) as { insertId: number };
@@ -29,6 +42,13 @@ class employeeModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param email @type {string}
+   * @param pass @type {string}
+   * @returns Promise<Employee | null>
+   */
+
   async makeAuth(email: string, pass: string): Promise<Employee | null> {
     try {
       const rows = (await query(
@@ -38,7 +58,7 @@ class employeeModel {
       if (rows.length > 0) {
         const { password: hash } = rows[0];
 
-        if (HashPass.check(pass, hash)) {
+        if (this.tokens.check(pass, hash)) {
           const q = `SELECT id, name, email FROM employees WHERE email='${email}';`;
           const result = (await query(q)) as Employee[];
 
@@ -51,6 +71,12 @@ class employeeModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param id @type {number}
+   * @returns Promise<Employee>
+   */
+
   async getEmployee(id: number): Promise<Employee> {
     try {
       const rows = (await query(
@@ -62,6 +88,12 @@ class employeeModel {
       throw new Error(`unable to get this admin : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param page @type {number}
+   * @returns Promise<Pagination>
+   */
 
   async getEmployees(page: number): Promise<Pagination> {
     try {
@@ -110,6 +142,13 @@ class employeeModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param oldpassword @type {string}
+   * @param newpassword @type {string}
+   * @returns Promise<Accepted | null>
+   */
+
   async changePass(
     oldpassword: string,
     newpassword: string,
@@ -123,9 +162,9 @@ class employeeModel {
       if (password.length > 0) {
         const { password: hash } = password[0];
 
-        if (HashPass.check(oldpassword, hash)) {
+        if (this.tokens.check(oldpassword, hash)) {
           const rows = (await query(
-            `UPDATE  employees SET password='${HashPass.MakeHash(
+            `UPDATE  employees SET password='${this.tokens.MakeHash(
               newpassword
             )}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`
           )) as Accepted;

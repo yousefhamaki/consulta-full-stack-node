@@ -1,15 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import adminModel from "../../models/user/admin.model";
-import valiedPassword, { valiedEmail } from "../../traits/valiedPassword";
 import jwt from "jsonwebtoken";
 import config from "../../config";
 import JsonReurn from "../../interface/JsonReturn";
 import ARequest from "../../interface/Request.interface";
-
-const admin = new adminModel();
+import Check from "../../traits/Checks";
 
 class AdminController {
-  async create(
+  private readonly model = new adminModel();
+  private readonly check = new Check();
+
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async createController(
     req: ARequest,
     res: Response,
     next: NextFunction
@@ -18,19 +28,19 @@ class AdminController {
       return res.status(401).send({ message: "Unable to use this link" });
     }
 
-    const checkPass = await valiedPassword(req.body.password);
+    const checkPass = await this.check.Password(req.body.password);
     if (checkPass !== false) {
       return res.status(505).json(checkPass);
     }
 
     //add new user
     try {
-      const checkemail = await valiedEmail(req.body.email, "admins");
+      const checkemail = await this.check.Email(req.body.email, "admins");
       if (checkemail !== false) {
         return res.status(505).json(checkemail);
       }
 
-      const create = await admin.create(req.body);
+      const create = await this.model.create(req.body);
 
       const token = jwt.sign(
         { create },
@@ -47,13 +57,22 @@ class AdminController {
     }
   }
 
-  async login(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async loginController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const data = await admin.makeAuth(req.body.email, req.body.password);
+      const data = await this.model.makeAuth(req.body.email, req.body.password);
 
       if (!data) {
         return res.status(401).json({
@@ -72,13 +91,22 @@ class AdminController {
     }
   }
 
-  async getAdminInfo(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getAdminInfoController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await admin.getAdmin(Number(req.params.id));
+      const user = await this.model.getAdmin(Number(req.params.id));
 
       if (!user) {
         return res.status(404).json({
@@ -96,13 +124,22 @@ class AdminController {
     }
   }
 
-  async getAmins(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async getAminsController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const user = await admin.getAllAdmins(Number(req.query.page) | 1);
+      const user = await this.model.getAllAdmins(Number(req.query.page) | 1);
 
       return res.status(200).json({
         status: "success",
@@ -114,13 +151,22 @@ class AdminController {
     }
   }
 
-  async changePass(
+  /**
+   * @author y.hamaki
+   * @type controller
+   * @param req @type {import ARequest from "../../interface/Request.interface";}
+   * @param res @type {import { Response } from "express";}
+   * @param next @type {import { NextFunction } from "express";}
+   * @returns Promise<Response<JsonReurn> | void>
+   */
+
+  async changePassController(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<Response<JsonReurn> | void> {
     try {
-      const result = await admin.changePass(
+      const result = await this.model.changePass(
         req.body.oldpassword,
         req.body.newpassword,
         Number(req.body.id)

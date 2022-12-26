@@ -1,17 +1,30 @@
 import { query } from "../../database/connect";
-import HashPass from "../../traits/HashPass";
 import Admin from "../../types/admin.type";
 import { Pagination } from "../../types/user.type";
 import config from "../../config";
 import Accepted from "../../types/accepted.type";
+import Tokens from "../../traits/Tokens";
+
+/**
+ * @author y.hamaki
+ * @since 12/22
+ */
 
 class adminModel {
+  private readonly tokens = new Tokens();
+
+  /**
+   * @type Function
+   * @param data @type {Admin}
+   * @returns Promise<Admin>
+   */
+
   async create(data: Admin): Promise<Admin> {
     try {
       const rows = (await query(
         `INSERT INTO admins (name, email, password, created_at, updated_at)
-            VALUES ('${data.name}', '${data.email}', '${HashPass.MakeHash(
-          data.password
+            VALUES ('${data.name}', '${data.email}', '${this.tokens.MakeHash(
+          data.password as string
         )}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);`
       )) as { insertId: number };
 
@@ -22,6 +35,13 @@ class adminModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param email @type {string}
+   * @param pass @type {string}
+   * @returns Promise<Admin | null>
+   */
+
   async makeAuth(email: string, pass: string): Promise<Admin | null> {
     try {
       const rows = (await query(
@@ -31,7 +51,7 @@ class adminModel {
       if (rows.length > 0) {
         const { password: hash } = rows[0];
 
-        if (HashPass.check(pass, hash)) {
+        if (this.tokens.check(pass, hash as string)) {
           const user = (await this.getAdmin(rows[0].id as number)) as Admin;
           return user;
         }
@@ -41,6 +61,12 @@ class adminModel {
       throw new Error(`unable to login ${email} : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param id @type {number}
+   * @returns Promise<Admin>
+   */
 
   async getAdmin(id: number): Promise<Admin> {
     try {
@@ -53,6 +79,12 @@ class adminModel {
       throw new Error(`unable to get this admin : ${(err as Error).message}`);
     }
   }
+
+  /**
+   * @type Function
+   * @param page @type {number}
+   * @returns Promise<Pagination>
+   */
 
   async getAllAdmins(page: number): Promise<Pagination> {
     try {
@@ -99,6 +131,13 @@ class adminModel {
     }
   }
 
+  /**
+   * @type Function
+   * @param oldpassword @type {string}
+   * @param newpassword @type {string}
+   * @returns Promise<Accepted | null>
+   */
+
   async changePass(
     oldpassword: string,
     newpassword: string,
@@ -112,9 +151,9 @@ class adminModel {
       if (password.length > 0) {
         const { password: hash } = password[0];
 
-        if (HashPass.check(oldpassword, hash)) {
+        if (this.tokens.check(oldpassword, hash as string)) {
           const rows = (await query(
-            `UPDATE  admins SET password='${HashPass.MakeHash(
+            `UPDATE  admins SET password='${this.tokens.MakeHash(
               newpassword
             )}', updated_at=CURRENT_TIMESTAMP WHERE id='${id}'`
           )) as Accepted;

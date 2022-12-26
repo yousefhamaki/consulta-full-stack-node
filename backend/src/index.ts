@@ -2,7 +2,7 @@ import express, { Application } from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import ErrorMiddleware from "./app/middleware/Error.middleware";
+import ErrorMiddleWare from "./app/middleware/Error.middleware";
 import config from "./app/config";
 import Routers from "./app/routes/index";
 import Handler from "./app/controller/Handler.controller";
@@ -11,6 +11,7 @@ import path from "path";
 
 const app: Application = express();
 const port = config.port || 5000;
+const HandleErrors = new ErrorMiddleWare();
 
 //middleware to parse incoming request
 app.use(express.json());
@@ -47,7 +48,7 @@ if (config.ActiveHome) {
 app.use("/api", Routers);
 
 //handle errors
-app.use(ErrorMiddleware);
+app.use(HandleErrors.HandleErrors);
 
 //404 Request
 app.use(Handler.Error404);

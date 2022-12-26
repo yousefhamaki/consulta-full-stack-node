@@ -1,36 +1,47 @@
 import { Router } from "express";
-import Query from "../../../middleware/Query.middleware";
-import { selfData } from "../../../middleware/Authorization.middleware";
-import employeeController from "../../../controller/user/employee.controller";
+import QueryMiddleware from "../../../middleware/Query.middleware";
+import AuthorizationMiddleWare from "../../../middleware/Authorization.middleware";
 import employeeRequest from "../../../requests/user/employee.request";
-import ValidToken, {
-  isValied,
-} from "../../../middleware/ValidateToken.middleware";
+import { employee } from "../../../controller/user";
 
 const router = Router();
-const controller = new employeeController();
 const requests = new employeeRequest();
+const checkQuery = new QueryMiddleware();
+const Authorization = new AuthorizationMiddleWare();
 
-router.post("/login", Query(requests.login), controller.login); //tested
+router.post(
+  "/login",
+  checkQuery.Query(requests.login),
+  employee.loginController
+); //tested
 router.post(
   "/add",
-  ValidToken,
-  isValied("admin"),
-  Query(requests.add),
-  controller.create
+  Authorization.ValidToken,
+  Authorization.isValied("admin"),
+  checkQuery.Query(requests.add),
+  employee.createController
 ); //tested
 
 router.put(
   "/me/change/pass",
-  ValidToken,
-  isValied("employee"),
-  selfData,
-  Query(requests.changePass),
-  controller.changePass
+  Authorization.ValidToken,
+  Authorization.isValied("employee"),
+  Authorization.selfData,
+  checkQuery.Query(requests.changePass),
+  employee.changePassController
 ); //tested
 
-router.post("/all", ValidToken, isValied("admin"), controller.getEmployees);
+router.post(
+  "/all",
+  Authorization.ValidToken,
+  Authorization.isValied("admin"),
+  employee.getEmployeesController
+);
 
-router.get("/getinfo/:id", ValidToken, controller.getEmployeeInfo); //tested
+router.get(
+  "/getinfo/:id",
+  Authorization.ValidToken,
+  employee.getEmployeeInfoController
+); //tested
 
 export default router;
